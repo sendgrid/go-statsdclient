@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -88,7 +89,7 @@ func (c *Client) SetPrefix(prefix string) {
 
 // Increment the counter for the given bucket.
 func (c *Client) Increment(stat string, count int, rate float64) error {
-	return c.send(stat, rate, "%d|c", count)
+	return c.send(stat, rate, strconv.Itoa(count)+"|c")
 }
 
 // Decrement the counter for the given bucket.
@@ -98,12 +99,12 @@ func (c *Client) Decrement(stat string, count int, rate float64) error {
 
 // Record time spent for the given bucket with time.Duration.
 func (c *Client) Duration(stat string, duration time.Duration, rate float64) error {
-	return c.send(stat, rate, "%f|ms", duration.Seconds()*1000)
+	return c.send(stat, rate, strconv.FormatFloat(duration.Seconds()*1000, 'f', 6, 64)+"|ms")
 }
 
 // Record time spent for the given bucket in milliseconds.
 func (c *Client) Timing(stat string, delta int, rate float64) error {
-	return c.send(stat, rate, "%d|ms", delta)
+	return c.send(stat, rate, strconv.Itoa(delta)+"|ms")
 }
 
 // Calculate time spent in given function and send it.
@@ -115,22 +116,23 @@ func (c *Client) Time(stat string, rate float64, f func()) error {
 
 // Record arbitrary values for the given bucket.
 func (c *Client) Gauge(stat string, value int, rate float64) error {
-	return c.send(stat, rate, "%d|g", value)
+	return c.send(stat, rate, strconv.Itoa(value)+"|g")
 }
 
 // Increment the value of the gauge.
 func (c *Client) IncrementGauge(stat string, value int, rate float64) error {
-	return c.send(stat, rate, "+%d|g", value)
+	return c.send(stat, rate, "+"+strconv.Itoa(value)+"|g")
+	// return c.send(stat, rate, "+%d|g", value)
 }
 
 // Decrement the value of the gauge.
 func (c *Client) DecrementGauge(stat string, value int, rate float64) error {
-	return c.send(stat, rate, "-%d|g", value)
+	return c.send(stat, rate, "-"+strconv.Itoa(value)+"|g")
 }
 
 // Record unique occurences of events.
 func (c *Client) Unique(stat string, value int, rate float64) error {
-	return c.send(stat, rate, "%d|s", value)
+	return c.send(stat, rate, strconv.Itoa(value)+"|s")
 }
 
 // Flush writes any buffered data to the network.
@@ -150,13 +152,13 @@ func (c *Client) Close() error {
 func (c *Client) send(stat string, rate float64, format string, args ...interface{}) error {
 	if rate < 1 {
 		if rand.Float64() < rate {
-			format = fmt.Sprintf("%s|@%g", format, rate)
+			format = format + "|@" + strconv.FormatFloat(rate, 'f', -1, 64)
 		} else {
 			return nil
 		}
 	}
 
-	format = fmt.Sprintf("%s%s:%s", c.prefix, stat, format)
+	format = c.prefix + stat + ":" + format
 
 	c.m.Lock()
 	defer c.m.Unlock()
@@ -170,7 +172,7 @@ func (c *Client) send(stat string, rate float64, format string, args ...interfac
 
 	// Buffer is not empty, start filling it
 	if c.buf.Buffered() > 0 {
-		format = fmt.Sprintf("\n%s", format)
+		format = "\n" + format
 	}
 
 	_, err := fmt.Fprintf(c.buf, format, args...)
