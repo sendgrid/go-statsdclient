@@ -32,7 +32,7 @@ func (c *MockClient) Close() error {
 //			return statsdclient.NewMockClient(), nil
 //		}
 // If you want to access the Mock's buffer in your test, you'll have to type assert:
-//		c.(*statsdclient.MockClient).GetBuffer()
+//		c.(*statsdclient.MockClient).Buffer()
 func NewMockClient() *MockClient {
 	buffer := new(bytes.Buffer)
 	return &MockClient{
