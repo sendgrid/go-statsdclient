@@ -5,26 +5,20 @@ import (
 	"bytes"
 )
 
-type MockStatsClient interface {
-	StatsClient
-	GetBuffer() string
-	ResetBuffer()
-}
-
-type mockClient struct {
+type MockClient struct {
 	client
 	buffer *bytes.Buffer
 }
 
-func (c *mockClient) GetBuffer() string {
+func (c *MockClient) Buffer() string {
 	return c.buffer.String()
 }
 
-func (c *mockClient) ResetBuffer() {
+func (c *MockClient) ResetBuffer() {
 	c.buffer.Reset()
 }
 
-func (c *mockClient) Close() error {
+func (c *MockClient) Close() error {
 	return nil
 }
 
@@ -38,10 +32,10 @@ func (c *mockClient) Close() error {
 //			return statsdclient.NewMockClient(), nil
 //		}
 // If you want to access the Mock's buffer in your test, you'll have to type assert:
-//		c.(statsdclient.MockStatsClient).GetBuffer()
-func NewMockClient() MockStatsClient {
+//		c.(*statsdclient.MockClient).GetBuffer()
+func NewMockClient() *MockClient {
 	buffer := new(bytes.Buffer)
-	return &mockClient{
+	return &MockClient{
 		client: client{buf: bufio.NewWriterSize(buffer, defaultBufSize)},
 		buffer: buffer,
 	}
