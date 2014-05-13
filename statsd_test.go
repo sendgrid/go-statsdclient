@@ -170,12 +170,13 @@ func TestMultiPacketOverflow(t *testing.T) {
 func TestPrefix(t *testing.T) {
 	buf := new(bytes.Buffer)
 	c := fakeClient(buf)
-	c.SetPrefix(MakePrefix("test", "statsdclient", "test.example.com"))
+	prefix := "test.statsdclient.test_example_com."
+	c.SetPrefix(prefix)
 	err := c.Increment("key", 1, 1.0)
 	assert.Equal(t, err, nil)
 
 	err = c.Flush()
 	assert.Equal(t, err, nil)
 
-	assert.Equal(t, buf.String(), "test.statsdclient.test_example_com.key:1|c")
+	assert.Equal(t, buf.String(), prefix+"key:1|c")
 }

@@ -110,11 +110,3 @@ func BenchmarkTime(b *testing.B) {
 	}
 	result = r
 }
-
-func BenchmarkPrefix(b *testing.B) {
-	var r string
-	for i := 0; i < b.N; i++ {
-		r = MakePrefix("test", "statsdclient", "test.example.com")
-	}
-	strResult = r
-}
