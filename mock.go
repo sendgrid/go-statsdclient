@@ -3,6 +3,7 @@ package statsdclient
 import (
 	"bufio"
 	"bytes"
+	"strings"
 )
 
 type MockClient struct {
@@ -10,16 +11,17 @@ type MockClient struct {
 	buffer *bytes.Buffer
 }
 
-func (c *MockClient) Buffer() string {
-	return c.buffer.String()
-}
-
-func (c *MockClient) ResetBuffer() {
-	c.buffer.Reset()
-}
-
 func (c *MockClient) Close() error {
 	return nil
+}
+
+func (c *MockClient) NextStat() string {
+	stat, err := c.buffer.ReadString(0x0A) // newline character
+	if err == nil {
+		stat = strings.TrimSpace(stat)
+	}
+
+	return stat
 }
 
 // Used for mocking the StatsClient for testing purposes
