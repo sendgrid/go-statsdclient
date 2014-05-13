@@ -12,7 +12,8 @@ func TestIncrement(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "incr:1|c")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "incr:1|c")
 }
 
 func TestDecrement(t *testing.T) {
@@ -21,7 +22,8 @@ func TestDecrement(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "decr:-1|c")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "decr:-1|c")
 }
 
 func TestDuration(t *testing.T) {
@@ -30,7 +32,8 @@ func TestDuration(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "timing:123.456789|ms")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "timing:123.456789|ms")
 }
 
 func TestIncrementRate(t *testing.T) {
@@ -39,7 +42,8 @@ func TestIncrementRate(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "incr:1|c|@0.99")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "incr:1|c|@0.99")
 }
 
 func TestPreciseRate(t *testing.T) {
@@ -49,7 +53,8 @@ func TestPreciseRate(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "incr:1|c|@0.99901")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "incr:1|c|@0.99901")
 }
 
 func TestRate(t *testing.T) {
@@ -58,7 +63,9 @@ func TestRate(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "")
+	stat, err := c.NextStat()
+	assert.Equal(t, stat, "")
+	assert.NotEqual(t, err, nil)
 }
 
 func TestGauge(t *testing.T) {
@@ -67,7 +74,8 @@ func TestGauge(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "gauge:300|g")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "gauge:300|g")
 }
 
 func TestIncrementGauge(t *testing.T) {
@@ -76,7 +84,8 @@ func TestIncrementGauge(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "gauge:+10|g")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "gauge:+10|g")
 }
 
 func TestDecrementGauge(t *testing.T) {
@@ -85,7 +94,8 @@ func TestDecrementGauge(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "gauge:-4|g")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "gauge:-4|g")
 }
 
 func TestUnique(t *testing.T) {
@@ -94,7 +104,8 @@ func TestUnique(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "unique:765|s")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "unique:765|s")
 }
 
 func TestMilliseconds(t *testing.T) {
@@ -112,7 +123,8 @@ func TestTiming(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "timing:350|ms")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "timing:350|ms")
 }
 
 func TestTime(t *testing.T) {
@@ -129,8 +141,10 @@ func TestMultiPacket(t *testing.T) {
 	assert.Equal(t, err, nil)
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "unique:765|s")
-	assert.Equal(t, c.NextStat(), "unique:765|s")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "unique:765|s")
+	stat, _ = c.NextStat()
+	assert.Equal(t, stat, "unique:765|s")
 }
 
 func TestMultiPacketOverflow(t *testing.T) {
@@ -140,12 +154,14 @@ func TestMultiPacketOverflow(t *testing.T) {
 		assert.Equal(t, err, nil)
 	}
 	for i := 0; i < 39; i++ {
-		assert.Equal(t, c.NextStat(), "unique:765|s")
+		stat, _ := c.NextStat()
+		assert.Equal(t, stat, "unique:765|s")
 	}
 
 	err := c.Flush()
 	assert.Equal(t, err, nil)
-	assert.Equal(t, c.NextStat(), "unique:765|s")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "unique:765|s")
 }
 
 func TestPrefix(t *testing.T) {
@@ -156,6 +172,6 @@ func TestPrefix(t *testing.T) {
 
 	err = c.Flush()
 	assert.Equal(t, err, nil)
-
-	assert.Equal(t, c.NextStat(), "test.statsdclient.test_example_com.key:1|c")
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "test.statsdclient.test_example_com.key:1|c")
 }

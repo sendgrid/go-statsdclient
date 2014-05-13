@@ -34,13 +34,7 @@ type StatsClient interface {
 	Increment(stat string, count int, rate float64) error
 	Decrement(stat string, count int, rate float64) error
 	Duration(stat string, duration time.Duration, rate float64) error
-	Timing(stat string, delta int, rate float64) error
-	Time(stat string, rate float64, f func()) error
 	Gauge(stat string, value int, rate float64) error
-	IncrementGauge(stat string, value int, rate float64) error
-	DecrementGauge(stat string, value int, rate float64) error
-	Unique(stat string, value int, rate float64) error
-	Flush() error
 	Close() error
 }
 

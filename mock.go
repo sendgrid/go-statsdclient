@@ -3,6 +3,7 @@ package statsdclient
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"strings"
 )
 
@@ -15,13 +16,23 @@ func (c *MockClient) Close() error {
 	return nil
 }
 
-func (c *MockClient) NextStat() string {
-	stat, err := c.buffer.ReadString(0x0A) // newline character
-	if err == nil {
-		stat = strings.TrimSpace(stat)
+// NextStat returns a string representation of the stat:
+// 		Increment "statname:1|c"
+// 		Decrement "statname:-1|c"
+// 		Duration  "statname:10000.000000|ms"
+// 		Gauge     "statname:1|g"
+// No newline delimiter is included in the result.
+// If no more stats are available, an empty string is returned accompanied by a non-nil error.
+func (c *MockClient) NextStat() (string, error) {
+	stat, _ := c.buffer.ReadString(0x0A) // newline character
+	stat = strings.TrimSpace(stat)
+
+	var err error
+	if stat == "" {
+		err = errors.New("End of stats")
 	}
 
-	return stat
+	return stat, err
 }
 
 // Used for mocking the StatsClient for testing purposes
