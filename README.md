@@ -7,7 +7,7 @@ go-statsdclient is a client library for statsd written in Go.
 Download and install :
 
 ```
-$ go get github.com/sendgrid/go-statsclient
+$ go get -u -v github.com/sendgrid/go-statsclient
 ```
 
 Add it to your code :
@@ -21,8 +21,7 @@ import "github.com/sendgrid/go-statsdclient"
 ```go
 c := statsdclient.Dial("localhost:8125")
 
-hostname, _ := os.Hostname()
-c.SetPrefix(statsdclient.MakePrefix("production", "exampleapp", hostname))
+c.SetPrefix(os.Getenv("APP_STATSD_PREFIX"))
 
 c.Increment("incr", 1, 1)
 c.Decrement("decr", 1, 0.1)
