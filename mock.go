@@ -33,8 +33,8 @@ func (c *MockClient) NextStat() string {
 // 		dialStatsd = func(addr string) (StatsClient, error) {
 //			return statsdclient.NewMockClient(), nil
 //		}
-// If you want to access the Mock's buffer in your test, you'll have to type assert:
-//		c.(*statsdclient.MockClient).Buffer()
+// If you want to access the Mock's stats in your test, you'll have to type assert:
+//		c.(*statsdclient.MockClient).NextStat()
 func NewMockClient() *MockClient {
 	buffer := new(bytes.Buffer)
 	return &MockClient{
