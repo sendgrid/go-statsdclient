@@ -1,6 +1,9 @@
 Changelog
 =========
 
+# 2.1.0
+- SetPrefix ensures there is only a single "." delimeter at the end. Will remove extraneous ones if present and add one if not present.
+
 # 2.0.0
 - Dial returns an interface, not a concrete type
   (https://github.com/sendgrid/go-statsdclient/pull/5)
