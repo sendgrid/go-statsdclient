@@ -164,16 +164,28 @@ func TestMultiPacketOverflow(t *testing.T) {
 	assert.Equal(t, stat, "unique:765|s")
 }
 
+var prefixTests = []struct {
+	prefix   string
+	suffix   string
+	expected string
+}{
+	{"test.statsdclient.test_example_com", ".", ".key:1|c"},
+	{"test.statsdclient.test_example_com", "", ".key:1|c"},
+	{"test.statsdclient.test_example_com", "...", ".key:1|c"},
+}
+
 func TestPrefix(t *testing.T) {
-	c := NewMockClient()
-	prefix := "test.statsdclient.test_example_com."
-	c.SetPrefix(prefix)
-	err := c.Increment("key", 1, 1.0)
-	assert.Equal(t, err, nil)
+	for _, test := range prefixTests {
+		c := NewMockClient()
 
-	err = c.Flush()
-	assert.Equal(t, err, nil)
+		c.SetPrefix(test.prefix + test.suffix)
+		err := c.Increment("key", 1, 1.0)
+		assert.Equal(t, err, nil)
 
-	stat, _ := c.NextStat()
-	assert.Equal(t, stat, prefix+"key:1|c")
+		err = c.Flush()
+		assert.Equal(t, err, nil)
+
+		stat, _ := c.NextStat()
+		assert.Equal(t, stat, test.prefix+test.expected)
+	}
 }
