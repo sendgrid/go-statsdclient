@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -91,9 +92,10 @@ func newClient(conn net.Conn, size int) *client {
 }
 
 // Set the key prefix for the client. All future stats will be sent with the
-// prefix value prepended to the bucket
+// prefix value prepended to the bucket.
+// Ensures there is only a single "." delimeter at the end. Will remove extraneous ones if present and add one if not present.
 func (c *client) SetPrefix(prefix string) {
-	c.prefix = prefix
+	c.prefix = strings.TrimRight(prefix, ".") + "."
 }
 
 // Increment the counter for the given bucket.

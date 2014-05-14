@@ -164,9 +164,23 @@ func TestMultiPacketOverflow(t *testing.T) {
 	assert.Equal(t, stat, "unique:765|s")
 }
 
-func TestPrefix(t *testing.T) {
+func TestPrefixWithDot(t *testing.T) {
 	c := NewMockClient()
-	prefix := "test.statsdclient.test_example_com."
+	prefix := "test.statsdclient.test_example_com"
+	c.SetPrefix(prefix + ".")
+	err := c.Increment("key", 1, 1.0)
+	assert.Equal(t, err, nil)
+
+	err = c.Flush()
+	assert.Equal(t, err, nil)
+
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, prefix+".key:1|c")
+}
+
+func TestPrefixWithoutDot(t *testing.T) {
+	c := NewMockClient()
+	prefix := "test.statsdclient.test_example_com"
 	c.SetPrefix(prefix)
 	err := c.Increment("key", 1, 1.0)
 	assert.Equal(t, err, nil)
@@ -175,5 +189,19 @@ func TestPrefix(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	stat, _ := c.NextStat()
-	assert.Equal(t, stat, prefix+"key:1|c")
+	assert.Equal(t, stat, prefix+".key:1|c")
+}
+
+func TestPrefixWithExtraDot(t *testing.T) {
+	c := NewMockClient()
+	prefix := "test.statsdclient.test_example_com"
+	c.SetPrefix(prefix + "...")
+	err := c.Increment("key", 1, 1.0)
+	assert.Equal(t, err, nil)
+
+	err = c.Flush()
+	assert.Equal(t, err, nil)
+
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, prefix+".key:1|c")
 }
