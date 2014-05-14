@@ -1,8 +1,6 @@
 package statsdclient
 
 import (
-	"bufio"
-	"bytes"
 	"testing"
 	"time"
 )
@@ -10,16 +8,9 @@ import (
 var result error
 var strResult string
 
-func benchFakeClient() *Client {
-	buf := new(bytes.Buffer)
-	return &Client{
-		buf: bufio.NewWriterSize(buf, defaultBufSize),
-	}
-}
-
 func BenchmarkIncrement(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Increment("incr", 1, 1)
@@ -32,7 +23,7 @@ func BenchmarkIncrement(b *testing.B) {
 
 func BenchmarkDecrement(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Decrement("decr", 1, 1)
@@ -42,7 +33,7 @@ func BenchmarkDecrement(b *testing.B) {
 
 func BenchmarkDuration(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 	time := time.Duration(123456789)
 
 	for i := 0; i < b.N; i++ {
@@ -53,7 +44,7 @@ func BenchmarkDuration(b *testing.B) {
 
 func BenchmarkGauge(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Gauge("gauge", 300, 1)
@@ -63,7 +54,7 @@ func BenchmarkGauge(b *testing.B) {
 
 func BenchmarkIncrementGauge(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.IncrementGauge("gauge", 10, 1)
@@ -73,7 +64,7 @@ func BenchmarkIncrementGauge(b *testing.B) {
 
 func BenchmarkDecrementGauge(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.DecrementGauge("gauge", 4, 1)
@@ -83,7 +74,7 @@ func BenchmarkDecrementGauge(b *testing.B) {
 
 func BenchmarkUnique(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Unique("unique", 765, 1)
@@ -93,7 +84,7 @@ func BenchmarkUnique(b *testing.B) {
 
 func BenchmarkTiming(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Timing("timing", 350, 1)
@@ -103,18 +94,10 @@ func BenchmarkTiming(b *testing.B) {
 
 func BenchmarkTime(b *testing.B) {
 	var r error
-	c := benchFakeClient()
+	c := NewMockClient()
 
 	for i := 0; i < b.N; i++ {
 		r = c.Time("time", 1, func() {})
 	}
 	result = r
-}
-
-func BenchmarkPrefix(b *testing.B) {
-	var r string
-	for i := 0; i < b.N; i++ {
-		r = MakePrefix("test", "statsdclient", "test.example.com")
-	}
-	strResult = r
 }
