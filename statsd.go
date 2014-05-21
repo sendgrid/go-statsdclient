@@ -130,6 +130,16 @@ func (c *client) Gauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, strconv.Itoa(value)+"|g")
 }
 
+// Record arbitrary values for the given bucket. float64
+func (c *client) GaugeFloat64(stat string, value, rate float64) error {
+	return c.send(stat, rate, strconv.FormatFloat(value, 'f', -1, 64)+"|g")
+}
+
+// Record arbitrary values for the given bucket. int64
+func (c *client) GaugeInt64(stat string, value int64, rate float64) error {
+	return c.send(stat, rate, strconv.FormatInt(value, 10)+"|g")
+}
+
 // Increment the value of the gauge.
 func (c *client) IncrementGauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, "+"+strconv.Itoa(value)+"|g")
