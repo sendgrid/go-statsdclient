@@ -52,6 +52,26 @@ func BenchmarkGauge(b *testing.B) {
 	result = r
 }
 
+func BenchmarkGaugeFloat64(b *testing.B) {
+	var r error
+	c := NewMockClient()
+
+	for i := 0; i < b.N; i++ {
+		r = c.GaugeFloat64("gauge", float64(300.12), 1)
+	}
+	result = r
+}
+
+func BenchmarkGaugeInt64(b *testing.B) {
+	var r error
+	c := NewMockClient()
+
+	for i := 0; i < b.N; i++ {
+		r = c.GaugeInt64("gauge", int64(300), 1)
+	}
+	result = r
+}
+
 func BenchmarkIncrementGauge(b *testing.B) {
 	var r error
 	c := NewMockClient()

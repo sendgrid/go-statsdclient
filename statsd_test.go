@@ -78,6 +78,26 @@ func TestGauge(t *testing.T) {
 	assert.Equal(t, stat, "gauge:300|g")
 }
 
+func TestGaugeFloat64(t *testing.T) {
+	c := NewMockClient()
+	err := c.GaugeFloat64("gauge", float64(300.12), 1)
+	assert.Equal(t, err, nil)
+	err = c.Flush()
+	assert.Equal(t, err, nil)
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "gauge:300.12|g")
+}
+
+func TestGaugeInt64(t *testing.T) {
+	c := NewMockClient()
+	err := c.GaugeInt64("gauge", int64(300), 1)
+	assert.Equal(t, err, nil)
+	err = c.Flush()
+	assert.Equal(t, err, nil)
+	stat, _ := c.NextStat()
+	assert.Equal(t, stat, "gauge:300|g")
+}
+
 func TestIncrementGauge(t *testing.T) {
 	c := NewMockClient()
 	err := c.IncrementGauge("gauge", 10, 1)
