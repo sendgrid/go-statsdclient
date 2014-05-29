@@ -58,7 +58,7 @@ func (m *StatsClient) Close() error {
 func (m *StatsClient) AssertStat(t Testable, stat StatsCommand) {
 	actualStat := m.Commands[0]
 	if actualStat != stat {
-		t.Errorf("expected stat %v, but got %v", stat, actualStat)
+		t.Errorf("got %v stat, expected %v", actualStat, stat)
 	}
 
 	// pop it off the top

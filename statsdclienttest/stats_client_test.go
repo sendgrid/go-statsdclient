@@ -169,7 +169,7 @@ func TestAsserts(t *testing.T) {
 			// AssertStat does not return an error shouldn't, not that it
 			// is returning an error when it should.
 			if 0 != len(tester.errors) {
-				t.Fatalf("AssertStat got %d erorrs, expected %d:\n%#v",
+				t.Fatalf("AssertStat got %d errors, expected %d:\n%#v",
 					len(tester.errors),
 					0,
 					tester.errors)
