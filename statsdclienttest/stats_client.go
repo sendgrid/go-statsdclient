@@ -28,6 +28,10 @@ type StatsClient struct {
 	Closed bool
 }
 
+func (m *StatsClient) SetPrefix(prefix string) {
+
+}
+
 func (m *StatsClient) Increment(stat string, delta int, sampleRate float64) error {
 	m.Commands = append(m.Commands, StatsCommand{"Increment", stat, delta, sampleRate})
 	m.Values[stat] += delta
@@ -46,8 +50,8 @@ func (m *StatsClient) Gauge(stat string, value int, sampleRate float64) error {
 	return nil
 }
 
-func (m *StatsClient) Timing(stat string, duration time.Duration, sampleRate float64) error {
-	m.Commands = append(m.Commands, StatsCommand{"Timing", stat, int(duration), sampleRate})
+func (m *StatsClient) Duration(stat string, duration time.Duration, sampleRate float64) error {
+	m.Commands = append(m.Commands, StatsCommand{"Duration", stat, int(duration), sampleRate})
 	m.Values[stat] = int(duration / time.Millisecond)
 	return nil
 }
