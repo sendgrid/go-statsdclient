@@ -61,15 +61,15 @@ func TestStatsClient(t *testing.T) {
 		t.Errorf("gauge got unexpected command %v, expected %v", lastCommand, expectedCommand)
 	}
 
-	key = "timing-key"
+	key = "duration-key"
 	duration := time.Duration(4) * time.Minute
 	sampleRate = .4
-	testClient.Timing(key, duration, sampleRate)
+	testClient.Duration(key, duration, sampleRate)
 
 	lastCommand = getLastCommand(testClient)
-	expectedCommand = StatsCommand{"Timing", key, int(duration), sampleRate}
+	expectedCommand = StatsCommand{"Duration", key, int(duration), sampleRate}
 	if lastCommand != expectedCommand {
-		t.Errorf("timing got unexpected command %v, expected %v", lastCommand, expectedCommand)
+		t.Errorf("duration got unexpected command %v, expected %v", lastCommand, expectedCommand)
 	}
 }
 
@@ -146,8 +146,8 @@ func TestAsserts(t *testing.T) {
 				testClient.Decrement(statCmd.Stat, statCmd.Value, statCmd.SampleRate)
 			case "Gauge":
 				testClient.Gauge(statCmd.Stat, statCmd.Value, statCmd.SampleRate)
-			case "Timing":
-				testClient.Timing(statCmd.Stat,
+			case "Duration":
+				testClient.Duration(statCmd.Stat,
 					time.Duration(statCmd.Value)*time.Millisecond,
 					statCmd.SampleRate)
 			default:
