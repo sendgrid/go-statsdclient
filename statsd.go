@@ -17,6 +17,7 @@ package statsdclient
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -159,6 +160,9 @@ func (c *client) Flush() error {
 func (c *client) Close() error {
 	c.m.Lock()
 	defer c.m.Unlock()
+	if c.buf == nil {
+		return errors.New("Already closed")
+	}
 	if err := c.buf.Flush(); err != nil {
 		return err
 	}
