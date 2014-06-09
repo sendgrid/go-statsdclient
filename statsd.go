@@ -17,6 +17,7 @@ package statsdclient
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -95,6 +96,8 @@ func newClient(conn net.Conn, size int) *client {
 // prefix value prepended to the bucket.
 // Ensures there is only a single "." delimeter at the end. Will remove extraneous ones if present and add one if not present.
 func (c *client) SetPrefix(prefix string) {
+	c.m.Lock()
+	defer c.m.Unlock()
 	c.prefix = strings.TrimRight(prefix, ".") + "."
 }
 
@@ -148,12 +151,19 @@ func (c *client) Unique(stat string, value int, rate float64) error {
 
 // Flush writes any buffered data to the network.
 func (c *client) Flush() error {
+	c.m.Lock()
+	defer c.m.Unlock()
 	return c.buf.Flush()
 }
 
 // Closes the connection.
 func (c *client) Close() error {
-	if err := c.Flush(); err != nil {
+	c.m.Lock()
+	defer c.m.Unlock()
+	if c.buf == nil {
+		return errors.New("Already closed")
+	}
+	if err := c.buf.Flush(); err != nil {
 		return err
 	}
 	c.buf = nil
@@ -176,7 +186,7 @@ func (c *client) send(stat string, rate float64, format string, args ...interfac
 
 	// Flush data if we have reach the buffer limit
 	if c.buf.Available() < len(format) {
-		if err := c.Flush(); err != nil {
+		if err := c.buf.Flush(); err != nil {
 			return nil
 		}
 	}

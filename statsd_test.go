@@ -189,3 +189,13 @@ func TestPrefix(t *testing.T) {
 		assert.Equal(t, stat, test.prefix+test.expected)
 	}
 }
+
+func TestMultipleCloses(t *testing.T) {
+	c := NewMockClient()
+	err := c.Close()
+	assert.Equal(t, nil, err)
+	err = c.Close()
+	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
+	err = c.Close()
+	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
+}
