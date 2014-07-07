@@ -2,6 +2,7 @@ package statsdclienttest
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -209,4 +210,21 @@ func TestAsserts(t *testing.T) {
 
 func getLastCommand(l *StatsClient) StatsCommand {
 	return l.Commands[len(l.Commands)-1]
+}
+
+func TestEmptyStatsDoesntCausePanic(t *testing.T) {
+	client := NewStatsClient()
+
+	s := StatsCommand{}
+
+	fakeTest := &fakeTestable{}
+	client.AssertStat(fakeTest, s)
+
+	if len(fakeTest.errors) != 1 {
+		t.Fatalf("len(fakeTest.errors) = %d; want %d", len(fakeTest.errors), 1)
+	}
+
+	if !strings.Contains(fakeTest.errors[0], "no stats exist for command") {
+		t.Errorf("Unexpected error: %s", fakeTest.errors[0])
+	}
 }
