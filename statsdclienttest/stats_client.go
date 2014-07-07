@@ -64,6 +64,11 @@ func (m *StatsClient) Close() error {
 // AssertStat asserts that a given stat is the first item in the list of commands, then pops that command off
 // the list.
 func (m *StatsClient) AssertStat(t Testable, stat StatsCommand) {
+	if len(m.Commands) == 0 {
+		t.Errorf("no stats exist for command: %v", stat)
+		return
+	}
+
 	actualStat := m.Commands[0]
 	if actualStat != stat {
 		t.Errorf("got %v stat, expected %v", actualStat, stat)
