@@ -22,7 +22,7 @@ type StatsCommand struct {
 // A stat logger used for tests
 type StatsClient struct {
 	// The list of stat commands that have been issued to the stat logger
-	Commands []StatsCommand
+	Commands map[StatsCommand]int
 
 	// The accumulated values of each stat
 	Values map[string]int
@@ -42,7 +42,7 @@ func (m *StatsClient) Increment(stat string, delta int, sampleRate float64) erro
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.Commands = append(m.Commands, StatsCommand{"Increment", stat, delta, sampleRate})
+	m.Commands[StatsCommand{"Increment", stat, delta, sampleRate}] += 1
 	m.Values[stat] += delta
 	return nil
 }
@@ -51,7 +51,7 @@ func (m *StatsClient) Decrement(stat string, delta int, sampleRate float64) erro
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.Commands = append(m.Commands, StatsCommand{"Decrement", stat, delta, sampleRate})
+	m.Commands[StatsCommand{"Decrement", stat, delta, sampleRate}] += 1
 	m.Values[stat] -= delta
 	return nil
 }
@@ -60,7 +60,7 @@ func (m *StatsClient) Gauge(stat string, value int, sampleRate float64) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.Commands = append(m.Commands, StatsCommand{"Gauge", stat, value, sampleRate})
+	m.Commands[StatsCommand{"Gauge", stat, value, sampleRate}] += 1
 	m.Values[stat] = value
 	return nil
 }
@@ -69,7 +69,7 @@ func (m *StatsClient) Duration(stat string, duration time.Duration, sampleRate f
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.Commands = append(m.Commands, StatsCommand{"Duration", stat, int(duration), sampleRate})
+	m.Commands[StatsCommand{"Duration", stat, int(duration), sampleRate}] += 1
 	m.Values[stat] = int(duration / time.Millisecond)
 	return nil
 }
@@ -79,8 +79,7 @@ func (m *StatsClient) Close() error {
 	return nil
 }
 
-// AssertStat asserts that a given stat is the first item in the list of commands, then pops that command off
-// the list.
+// AssertStat asserts that a given stat is in the list of logged stats, then removes it
 func (m *StatsClient) AssertStat(t Testable, stat StatsCommand) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -90,13 +89,14 @@ func (m *StatsClient) AssertStat(t Testable, stat StatsCommand) {
 		return
 	}
 
-	actualStat := m.Commands[0]
-	if actualStat != stat {
-		t.Errorf("got %v stat, expected %v", actualStat, stat)
+	called := m.Commands[stat]
+
+	if called == 0 {
+		t.Errorf("got %v stat called %d times, expected %d times", stat, 0, called)
 	}
 
 	// pop it off the top
-	m.Commands = m.Commands[1:]
+	delete(m.Commands, stat)
 }
 
 // AssertValue asserts that the value of the stat with the given stat matches the given value.
@@ -125,10 +125,19 @@ func (m *StatsClient) AssertLogged(t Testable, stat string) {
 	}
 }
 
+func (m *StatsClient) AssertLoggedNumber(t Testable, stat StatsCommand, n int) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.Commands[stat] != n {
+		t.Errorf("stat %q logged %d times, expected %d times", stat, m.Commands[stat], n)
+	}
+}
+
 // NewStatsClient retur
 func NewStatsClient() *StatsClient {
 	return &StatsClient{
-		Commands: make([]StatsCommand, 0),
+		Commands: make(map[StatsCommand]int),
 		Values:   make(map[string]int),
 	}
 }
