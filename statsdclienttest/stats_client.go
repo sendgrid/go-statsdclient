@@ -88,8 +88,8 @@ func (m *StatsClient) AssertStat(t Testable, stat StatsCommand) {
 // AssertValue asserts that the value of the stat with the given stat matches the given value.
 // If the stat has not been logged, the test will fail.
 func (m *StatsClient) AssertValue(t Testable, stat string, value int) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
 	actualValue, ok := m.Values[stat]
 	if !ok {
@@ -103,8 +103,8 @@ func (m *StatsClient) AssertValue(t Testable, stat string, value int) {
 
 // AssertLogged asserts that any stat with the given stat was logged
 func (m *StatsClient) AssertLogged(t Testable, stat string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
 	if _, ok := m.Values[stat]; !ok {
 		t.Errorf("expected stat %q to be logged", stat)
@@ -112,8 +112,8 @@ func (m *StatsClient) AssertLogged(t Testable, stat string) {
 }
 
 func (m *StatsClient) AssertLoggedN(t Testable, stat StatsCommand, n int) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
 	if m.commands[stat] != n {
 		t.Errorf("stat %q logged %d times, expected %d times", stat, m.commands[stat], n)
