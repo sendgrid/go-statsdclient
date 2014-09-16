@@ -2,7 +2,6 @@ package statsdclienttest
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 )
@@ -34,44 +33,33 @@ func TestStatsClient(t *testing.T) {
 	sampleRate := .1
 	testClient.Decrement(key, delta, sampleRate)
 
-	lastCommand := getLastCommand(testClient)
 	expectedCommand := StatsCommand{"Decrement", key, delta, sampleRate}
-	if lastCommand != expectedCommand {
-		t.Errorf("decrement got unexpected command %v, expected %v", lastCommand, expectedCommand)
-	}
+
+	testClient.AssertStat(t, expectedCommand)
 
 	key = "inc-key"
 	delta = 2
 	sampleRate = .2
 	testClient.Increment(key, delta, sampleRate)
 
-	lastCommand = getLastCommand(testClient)
 	expectedCommand = StatsCommand{"Increment", key, delta, sampleRate}
-	if lastCommand != expectedCommand {
-		t.Errorf("increment got unexpected command %v, expected %v", lastCommand, expectedCommand)
-	}
+	testClient.AssertStat(t, expectedCommand)
 
 	key = "gauge-key"
 	delta = 3
 	sampleRate = .3
 	testClient.Gauge(key, delta, sampleRate)
 
-	lastCommand = getLastCommand(testClient)
 	expectedCommand = StatsCommand{"Gauge", key, delta, sampleRate}
-	if lastCommand != expectedCommand {
-		t.Errorf("gauge got unexpected command %v, expected %v", lastCommand, expectedCommand)
-	}
+	testClient.AssertStat(t, expectedCommand)
 
 	key = "duration-key"
 	duration := time.Duration(4) * time.Minute
 	sampleRate = .4
 	testClient.Duration(key, duration, sampleRate)
 
-	lastCommand = getLastCommand(testClient)
 	expectedCommand = StatsCommand{"Duration", key, int(duration), sampleRate}
-	if lastCommand != expectedCommand {
-		t.Errorf("duration got unexpected command %v, expected %v", lastCommand, expectedCommand)
-	}
+	testClient.AssertStat(t, expectedCommand)
 }
 
 func TestAsserts(t *testing.T) {
@@ -205,26 +193,5 @@ func TestAsserts(t *testing.T) {
 
 			tester.reset()
 		}
-	}
-}
-
-func getLastCommand(l *StatsClient) StatsCommand {
-	return l.Commands[len(l.Commands)-1]
-}
-
-func TestEmptyStatsDoesntCausePanic(t *testing.T) {
-	client := NewStatsClient()
-
-	s := StatsCommand{}
-
-	fakeTest := &fakeTestable{}
-	client.AssertStat(fakeTest, s)
-
-	if len(fakeTest.errors) != 1 {
-		t.Fatalf("len(fakeTest.errors) = %d; want %d", len(fakeTest.errors), 1)
-	}
-
-	if !strings.Contains(fakeTest.errors[0], "no stats exist for command") {
-		t.Errorf("Unexpected error: %s", fakeTest.errors[0])
 	}
 }
