@@ -46,6 +46,10 @@ type client struct {
 	buf  *bufio.Writer
 	m    sync.Mutex
 
+	size int
+
+	addr string
+
 	// The prefix to be added to every key. Should include the "." at the end if desired
 	prefix string
 }
@@ -60,7 +64,7 @@ func Dial(addr string) (StatsClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn, 0), nil
+	return newClient(conn, 0, addr), nil
 }
 
 // DialTimeout acts like Dial but takes a timeout. The timeout includes name resolution, if required.
@@ -69,7 +73,7 @@ func DialTimeout(addr string, timeout time.Duration) (StatsClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn, 0), nil
+	return newClient(conn, 0, addr), nil
 }
 
 // DialSize acts like Dial but takes a packet size.
@@ -79,17 +83,31 @@ func DialSize(addr string, size int) (StatsClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newClient(conn, size), nil
+	return newClient(conn, size, addr), nil
 }
 
-func newClient(conn net.Conn, size int) *client {
+func newClient(conn net.Conn, size int, addr string) *client {
 	if size <= 0 {
 		size = defaultBufSize
 	}
 	return &client{
 		conn: conn,
 		buf:  bufio.NewWriterSize(conn, size),
+		addr: addr,
+		size: size,
 	}
+}
+
+func (c *client) redial() error {
+	var err error
+
+	c.conn.Close()
+
+	c.conn, err = net.Dial("udp", c.addr)
+
+	c.buf = bufio.NewWriterSize(c.conn, c.size)
+
+	return err
 }
 
 // Set the key prefix for the client. All future stats will be sent with the
@@ -187,7 +205,7 @@ func (c *client) send(stat string, rate float64, format string, args ...interfac
 	// Flush data if we have reach the buffer limit
 	if c.buf.Available() < len(format) {
 		if err := c.buf.Flush(); err != nil {
-			return nil
+			return c.redial()
 		}
 	}
 
@@ -197,5 +215,8 @@ func (c *client) send(stat string, rate float64, format string, args ...interfac
 	}
 
 	_, err := fmt.Fprintf(c.buf, format, args...)
+	if err != nil {
+		return c.redial()
+	}
 	return err
 }
