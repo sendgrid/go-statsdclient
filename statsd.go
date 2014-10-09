@@ -46,6 +46,8 @@ type client struct {
 	buf  *bufio.Writer
 	m    sync.Mutex
 
+	size int
+
 	addr string
 
 	// The prefix to be added to every key. Should include the "." at the end if desired
@@ -92,6 +94,7 @@ func newClient(conn net.Conn, size int, addr string) *client {
 		conn: conn,
 		buf:  bufio.NewWriterSize(conn, size),
 		addr: addr,
+		size: size,
 	}
 }
 
@@ -102,7 +105,7 @@ func (c *client) redial() error {
 
 	c.conn, err = net.Dial("udp", c.addr)
 
-	c.buf = bufio.NewWriterSize(c.conn, defaultBufSize)
+	c.buf = bufio.NewWriterSize(c.conn, c.size)
 
 	return err
 }
