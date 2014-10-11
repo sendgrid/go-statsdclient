@@ -1,9 +1,14 @@
 package statsdclient
 
 import (
-	"github.com/bmizerany/assert"
+	"io"
+	"io/ioutil"
+	"net"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/bmizerany/assert"
 )
 
 func TestIncrement(t *testing.T) {
@@ -198,4 +203,72 @@ func TestMultipleCloses(t *testing.T) {
 	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
 	err = c.Close()
 	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
+}
+
+func TestUDPServerCloses(t *testing.T) {
+	addr := net.UDPAddr{
+		Port: 0,
+		IP:   net.ParseIP("127.0.0.1"),
+	}
+
+	// create a UDP listener
+	listener, err := net.ListenUDP("udp", &addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	waitForCloseChan := make(chan struct{})
+
+	go func() {
+		_, err := io.Copy(ioutil.Discard, listener)
+		if err != nil {
+			t.Log(err)
+			close(waitForCloseChan)
+		}
+	}()
+
+	// Dial to whatever UDP server was created
+	conn, err := Dial(listener.LocalAddr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// We need the client for the flush method - the StatsClient interface does not expose it
+	client, ok := conn.(*client)
+	if !ok {
+		t.Fatal("do not have a client - it is needed to manually trigger a flush")
+	}
+
+	err = client.Gauge(strings.Repeat("k.", 256), 1, 1)
+	if err != nil {
+		t.Fatal("could not send Gauge", err)
+	}
+
+	err = client.Flush()
+	if err != nil {
+		t.Fatal("could not flush client", err)
+	}
+
+	err = listener.Close()
+	if err != nil {
+		t.Fatal("could not close listener", err)
+	}
+
+	// wait until the listener is fully shut down
+	<-waitForCloseChan
+
+	// This loop is required, because for some reason it would not fail consistently on the first attempt
+	// before the change to use `exconn` as the conncection object
+	// if at first you don't, keep trying and hope you don't
+	for i := 0; i < 10; i++ {
+		err = client.Gauge(strings.Repeat("k.", 256), 1, 1.0)
+		if err != nil {
+			t.Fatalf("Attempt #%d: Error should not have occurred even if the UDP server is down: %s", i, err)
+		}
+
+		err = client.Flush()
+		if err != nil {
+			t.Fatalf("Attempt #%d: could not flush client: %s", i, err)
+		}
+	}
 }
