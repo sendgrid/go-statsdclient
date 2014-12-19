@@ -8,6 +8,10 @@ func (n *nullStatsClient) SetPrefix(prefix string) {
 
 }
 
+func (n *nullStatsClient) Unique(stat string, count int, rate float64) error {
+	return nil
+}
+
 func (n *nullStatsClient) Increment(stat string, count int, rate float64) error {
 	return nil
 }

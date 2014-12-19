@@ -33,6 +33,7 @@ const (
 
 type StatsClient interface {
 	SetPrefix(prefix string)
+	Unique(stat string, count int, rate float64) error
 	Increment(stat string, count int, rate float64) error
 	Decrement(stat string, count int, rate float64) error
 	Duration(stat string, duration time.Duration, rate float64) error

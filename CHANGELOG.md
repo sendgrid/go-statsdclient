@@ -1,5 +1,8 @@
 Changelog
 =========
+# 3.1.0
+- Exposing the Unique statsd method
+
 # 3.0.0
 - using a map to track stats that have been logged. This way, we can also tell how many times a given stat has been logged
 
