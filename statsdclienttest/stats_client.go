@@ -38,6 +38,15 @@ func (m *StatsClient) SetPrefix(prefix string) {
 
 }
 
+func (m *StatsClient) Unique(stat string, value int, sampleRate float64) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.commands[StatsCommand{"Unique", stat, value, sampleRate}] += 1
+	m.Values[stat] = value
+	return nil
+}
+
 func (m *StatsClient) Increment(stat string, delta int, sampleRate float64) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()

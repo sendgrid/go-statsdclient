@@ -53,9 +53,17 @@ func TestStatsClient(t *testing.T) {
 	expectedCommand = StatsCommand{"Gauge", key, delta, sampleRate}
 	testClient.AssertStat(t, expectedCommand)
 
-	key = "duration-key"
-	duration := time.Duration(4) * time.Minute
+	key = "unique-key"
+	delta = 4
 	sampleRate = .4
+	testClient.Gauge(key, delta, sampleRate)
+
+	expectedCommand = StatsCommand{"Gauge", key, delta, sampleRate}
+	testClient.AssertStat(t, expectedCommand)
+
+	key = "duration-key"
+	duration := time.Duration(5) * time.Minute
+	sampleRate = .5
 	testClient.Duration(key, duration, sampleRate)
 
 	expectedCommand = StatsCommand{"Duration", key, int(duration), sampleRate}
@@ -107,6 +115,27 @@ func TestAsserts(t *testing.T) {
 			expectedErrors: 0,
 		},
 
+		// test that unique sets a value (not increments/decrements)
+		&assertTestCase{
+			stats: []StatsCommand{
+				StatsCommand{
+					Operation:  "Increment",
+					Stat:       "some-stat",
+					Value:      1,
+					SampleRate: 1.0,
+				},
+				StatsCommand{
+					Operation:  "Unique",
+					Stat:       "some-stat",
+					Value:      5,
+					SampleRate: 1.0,
+				},
+			},
+			expectedValues: map[string]int{"some-stat": 5},
+			expectedLogs:   []string{"some-stat"},
+			expectedErrors: 0,
+		},
+
 		// test that errors are reported when assertions fail
 		&assertTestCase{
 			stats: []StatsCommand{
@@ -135,6 +164,8 @@ func TestAsserts(t *testing.T) {
 				testClient.Decrement(statCmd.Stat, statCmd.Value, statCmd.SampleRate)
 			case "Gauge":
 				testClient.Gauge(statCmd.Stat, statCmd.Value, statCmd.SampleRate)
+			case "Unique":
+				testClient.Unique(statCmd.Stat, statCmd.Value, statCmd.SampleRate)
 			case "Duration":
 				testClient.Duration(statCmd.Stat,
 					time.Duration(statCmd.Value)*time.Millisecond,
