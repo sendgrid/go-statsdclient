@@ -53,3 +53,12 @@ func NewMockClient() *MockClient {
 		buffer: buffer,
 	}
 }
+
+// Create a mock of the StatsClient with a configurable buffer size
+func NewMockClientSize(size int) *MockClient {
+	buffer := new(bytes.Buffer)
+	return &MockClient{
+		client: client{buf: bufio.NewWriterSize(buffer, size)},
+		buffer: buffer,
+	}
+}
