@@ -47,9 +47,14 @@ func (c *MockClient) NextStat() (string, error) {
 // If you want to access the Mock's stats in your test, you'll have to type assert:
 //		c.(*statsdclient.MockClient).NextStat()
 func NewMockClient() *MockClient {
+	return NewMockClientSize(defaultBufSize)
+}
+
+// Create a mock of the StatsClient with a configurable buffer size
+func NewMockClientSize(size int) *MockClient {
 	buffer := new(bytes.Buffer)
 	return &MockClient{
-		client: client{buf: bufio.NewWriterSize(buffer, defaultBufSize)},
+		client: client{buf: bufio.NewWriterSize(buffer, size)},
 		buffer: buffer,
 	}
 }

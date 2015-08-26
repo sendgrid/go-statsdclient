@@ -1,5 +1,8 @@
 Changelog
 =========
+# 3.2.0
+- Add buffer-size configurable mock client
+
 # 3.1.0
 - Exposing the Unique statsd method
 
