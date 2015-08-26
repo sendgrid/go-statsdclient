@@ -125,7 +125,7 @@ func (m *StatsClient) AssertLoggedN(t Testable, stat StatsCommand, n int) {
 	defer m.mutex.RUnlock()
 
 	if m.commands[stat] != n {
-		t.Errorf("stat %q logged %d times, expected %d times", stat, m.commands[stat], n)
+		t.Errorf("stat %+v logged %d times, expected %d times", stat, m.commands[stat], n)
 	}
 }
 
