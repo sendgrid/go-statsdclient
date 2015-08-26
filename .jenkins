@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+PKG="github.com/sendgrid/go-statsdclient"
+
+set -ex
+
+docker run \
+    --volume="$PWD:/opt/go/src/$PKG" \
+    --env="GOPATH=/opt/go/" \
+    --workdir=/opt/go/src/$PKG \
+    docker.sendgrid.net/sendgrid/dev_go-1.4 go vet ./...
+
+docker run \
+    --volume="$PWD:/opt/go/src/$PKG" \
+    --env="GOPATH=/opt/go/" \
+    --workdir=/opt/go/src/$PKG \
+    docker.sendgrid.net/sendgrid/dev_go-1.4 go get github.com/bmizerany/assert && go test -race -timeout=1m ./...
