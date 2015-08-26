@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -ex
+
+DIR=$(cd `dirname $0`; pwd)
+PKG='github.com/sendgrid/go-statsdclient'
+
+docker run \
+    --volume="$DIR:/opt/go/src/$PKG" \
+    --env="GOPATH=/opt/go/src/$PKG/Godeps/_workspace:/opt/go" \
+    --workdir=/opt/go/src/$PKG/ \
+    docker.sendgrid.net/sendgrid/dev_go go vet ./...
+
+docker run \
+    --volume="$DIR:/opt/go/src/$PKG" \
+    --env="GOPATH=/opt/go/src/$PKG/Godeps/_workspace:/opt/go" \
+    --workdir=/opt/go/src/$PKG/ \
+    docker.sendgrid.net/sendgrid/dev_go go test -race -timeout=1m .
