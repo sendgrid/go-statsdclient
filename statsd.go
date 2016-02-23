@@ -109,7 +109,7 @@ func MakeStatsdPrefix(namespace, app, hostname string) string {
 	return fmt.Sprintf("%s.%s.%s.", namespace, app, underscoreHostname)
 }
 
-var GetHostname = func() (string, error) {
+func GetHostname() (string, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "UNKNOWN"

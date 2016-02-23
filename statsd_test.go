@@ -1,9 +1,11 @@
 package statsdclient
 
 import (
-	"github.com/bmizerany/assert"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/bmizerany/assert"
 )
 
 func TestIncrement(t *testing.T) {
@@ -198,4 +200,14 @@ func TestMultipleCloses(t *testing.T) {
 	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
 	err = c.Close()
 	assert.NotEqual(t, nil, "This should be an error on subsequent closes")
+}
+
+func TestMakeStatsdPrefix(t *testing.T) {
+	nameSpace := "testing"
+	app := "testApp"
+	hostName := "center.for.kids.who.cant.read.good"
+	expectedPrefix := fmt.Sprintf("%s.%s.center_for_kids_who_cant_read_good.", nameSpace, app)
+
+	actualPrefix := MakeStatsdPrefix(nameSpace, app, hostName)
+	assert.Equal(t, expectedPrefix, actualPrefix)
 }
