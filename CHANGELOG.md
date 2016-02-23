@@ -1,5 +1,8 @@
 Changelog
 =========
+# 3.2.1
+- Utility to create statsd prefix in form environment.appname.hostname
+
 # 3.2.0
 - Add buffer-size configurable mock client
 
