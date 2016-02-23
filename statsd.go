@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -100,6 +101,20 @@ func (c *client) SetPrefix(prefix string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	c.prefix = strings.TrimRight(prefix, ".") + "."
+}
+
+// makeStatsPrefix will create a stats key prefix based on the given environment, application name, and hostname.
+func MakeStatsdPrefix(namespace, app, hostname string) string {
+	underscoreHostname := strings.Replace(hostname, ".", "_", -1)
+	return fmt.Sprintf("%s.%s.%s.", namespace, app, underscoreHostname)
+}
+
+func GetHostname() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "UNKNOWN"
+	}
+	return hostname, err
 }
 
 // Increment the counter for the given bucket.
