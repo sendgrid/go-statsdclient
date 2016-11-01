@@ -1,6 +1,7 @@
 package statsdclient
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -271,4 +272,14 @@ func TestUDPServerCloses(t *testing.T) {
 			t.Fatalf("Attempt #%d: could not flush client: %s", i, err)
 		}
 	}
+}
+
+func TestMakeStatsdPrefix(t *testing.T) {
+	nameSpace := "testing"
+	app := "testApp"
+	hostName := "center.for.kids.who.cant.read.good"
+	expectedPrefix := fmt.Sprintf("%s.%s.center_for_kids_who_cant_read_good.", nameSpace, app)
+
+	actualPrefix := MakeStatsdPrefix(nameSpace, app, hostName)
+	assert.Equal(t, expectedPrefix, actualPrefix)
 }

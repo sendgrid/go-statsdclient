@@ -38,6 +38,15 @@ func (m *StatsClient) SetPrefix(prefix string) {
 
 }
 
+func (m *StatsClient) Unique(stat string, value int, sampleRate float64) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.commands[StatsCommand{"Unique", stat, value, sampleRate}] += 1
+	m.Values[stat] = value
+	return nil
+}
+
 func (m *StatsClient) Increment(stat string, delta int, sampleRate float64) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -116,7 +125,7 @@ func (m *StatsClient) AssertLoggedN(t Testable, stat StatsCommand, n int) {
 	defer m.mutex.RUnlock()
 
 	if m.commands[stat] != n {
-		t.Errorf("stat %q logged %d times, expected %d times", stat, m.commands[stat], n)
+		t.Errorf("stat %+v logged %d times, expected %d times", stat, m.commands[stat], n)
 	}
 }
 
