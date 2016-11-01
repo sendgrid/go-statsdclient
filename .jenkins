@@ -9,10 +9,10 @@ docker run \
     --volume="$DIR:/opt/go/src/$PKG" \
     --env="GOPATH=/opt/go/src/$PKG/Godeps/_workspace:/opt/go" \
     --workdir=/opt/go/src/$PKG/ \
-    docker.sendgrid.net/sendgrid/dev_go go vet ./...
+    docker.sendgrid.net/sendgrid/dev_go-1.4 go vet ./...
 
 docker run \
     --volume="$DIR:/opt/go/src/$PKG" \
     --env="GOPATH=/opt/go/src/$PKG/Godeps/_workspace:/opt/go" \
     --workdir=/opt/go/src/$PKG/ \
-    docker.sendgrid.net/sendgrid/dev_go go test -race -timeout=1m .
+    docker.sendgrid.net/sendgrid/dev_go-1.4 go test -race -timeout=1m .
