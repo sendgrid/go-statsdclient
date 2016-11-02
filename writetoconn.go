@@ -1,34 +1,36 @@
 package statsdclient
 
-import (
-	"net"
-)
+import "net"
 
 type writeToConn struct {
-	packetListener net.PacketConn
-	remoteAddr     *net.UDPAddr
+	remoteAddr *net.UDPAddr
+
+	udpConn *net.UDPConn
 }
 
 func newWriteToConn(raddr string) (*writeToConn, error) {
-	// need to create the local socket for sending messages from
-	packetListener, err := net.ListenPacket("udp", "127.0.0.1:0")
+	udpConn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
 	if err != nil {
 		return nil, err
 	}
 
-	// resolve the udp address provided
 	remoteAddr, err := net.ResolveUDPAddr("udp", raddr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &writeToConn{packetListener: packetListener, remoteAddr: remoteAddr}, nil
+	conn := &writeToConn{
+		udpConn:    udpConn,
+		remoteAddr: remoteAddr,
+	}
+	return conn, nil
 }
 
 func (w *writeToConn) Write(p []byte) (int, error) {
-	return w.packetListener.WriteTo(p, w.remoteAddr)
+	n, err := w.udpConn.WriteToUDP(p, w.remoteAddr)
+	return n, err
 }
 
 func (w *writeToConn) Close() error {
-	return w.packetListener.Close()
+	return w.udpConn.Close()
 }
