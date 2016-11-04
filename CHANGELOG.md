@@ -1,5 +1,8 @@
 Changelog
 =========
+# 3.2.2
+- Patch change to ensure that udp continues to send even if downstream server is not available
+ 
 # 3.2.1
 - Utility to create statsd prefix in form environment.appname.hostname
 

@@ -19,8 +19,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -44,7 +44,7 @@ type StatsClient interface {
 
 // A statsd client representing a connection to a statsd server.
 type client struct {
-	conn net.Conn
+	conn io.WriteCloser
 	buf  *bufio.Writer
 	m    sync.Mutex
 
@@ -58,7 +58,7 @@ func millisecond(d time.Duration) int {
 
 // Dial connects to the given address on the given network using net.Dial and then returns a new client for the connection.
 func Dial(addr string) (StatsClient, error) {
-	conn, err := net.Dial("udp", addr)
+	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func Dial(addr string) (StatsClient, error) {
 
 // DialTimeout acts like Dial but takes a timeout. The timeout includes name resolution, if required.
 func DialTimeout(addr string, timeout time.Duration) (StatsClient, error) {
-	conn, err := net.DialTimeout("udp", addr, timeout)
+	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +77,14 @@ func DialTimeout(addr string, timeout time.Duration) (StatsClient, error) {
 // DialSize acts like Dial but takes a packet size.
 // By default, the packet size is 512, see https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets for guidelines.
 func DialSize(addr string, size int) (StatsClient, error) {
-	conn, err := net.Dial("udp", addr)
+	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
 	}
 	return newClient(conn, size), nil
 }
 
-func newClient(conn net.Conn, size int) *client {
+func newClient(conn io.WriteCloser, size int) *client {
 	if size <= 0 {
 		size = defaultBufSize
 	}
