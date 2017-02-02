@@ -1,3 +1,3 @@
 package statsdclient
 
-const VERSION = "3.2.2"
+const VERSION = "3.3.0"

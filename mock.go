@@ -8,7 +8,7 @@ import (
 )
 
 type MockClient struct {
-	client
+	Client
 	buffer *bytes.Buffer
 }
 
@@ -54,7 +54,7 @@ func NewMockClient() *MockClient {
 func NewMockClientSize(size int) *MockClient {
 	buffer := new(bytes.Buffer)
 	return &MockClient{
-		client: client{buf: bufio.NewWriterSize(buffer, size)},
+		Client: Client{buf: bufio.NewWriterSize(buffer, size)},
 		buffer: buffer,
 	}
 }

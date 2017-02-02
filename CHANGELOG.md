@@ -1,5 +1,8 @@
 Changelog
 =========
+# 3.3.0
+- Expose the Client and have Dial return it instead of the StatsClient
+
 # 3.2.2
 - Patch change to ensure that udp continues to send even if downstream server is not available
  

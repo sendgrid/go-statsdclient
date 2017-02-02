@@ -229,15 +229,9 @@ func TestUDPServerCloses(t *testing.T) {
 	}()
 
 	// Dial to whatever UDP server was created
-	conn, err := Dial(listener.LocalAddr().String())
+	client, err := Dial(listener.LocalAddr().String())
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	// We need the client for the flush method - the StatsClient interface does not expose it
-	client, ok := conn.(*client)
-	if !ok {
-		t.Fatal("do not have a client - it is needed to manually trigger a flush")
 	}
 
 	err = client.Gauge(strings.Repeat("k.", 256), 1, 1)
