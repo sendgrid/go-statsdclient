@@ -43,7 +43,7 @@ type StatsClient interface {
 }
 
 // A statsd client representing a connection to a statsd server.
-type client struct {
+type Client struct {
 	conn io.WriteCloser
 	buf  *bufio.Writer
 	m    sync.Mutex
@@ -57,7 +57,7 @@ func millisecond(d time.Duration) int {
 }
 
 // Dial connects to the given address on the given network using net.Dial and then returns a new client for the connection.
-func Dial(addr string) (StatsClient, error) {
+func Dial(addr string) (*Client, error) {
 	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func Dial(addr string) (StatsClient, error) {
 }
 
 // DialTimeout acts like Dial but takes a timeout. The timeout includes name resolution, if required.
-func DialTimeout(addr string, timeout time.Duration) (StatsClient, error) {
+func DialTimeout(addr string, timeout time.Duration) (*Client, error) {
 	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func DialTimeout(addr string, timeout time.Duration) (StatsClient, error) {
 
 // DialSize acts like Dial but takes a packet size.
 // By default, the packet size is 512, see https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets for guidelines.
-func DialSize(addr string, size int) (StatsClient, error) {
+func DialSize(addr string, size int) (*Client, error) {
 	conn, err := newWriteToConn(addr)
 	if err != nil {
 		return nil, err
@@ -84,11 +84,11 @@ func DialSize(addr string, size int) (StatsClient, error) {
 	return newClient(conn, size), nil
 }
 
-func newClient(conn io.WriteCloser, size int) *client {
+func newClient(conn io.WriteCloser, size int) *Client {
 	if size <= 0 {
 		size = defaultBufSize
 	}
-	return &client{
+	return &Client{
 		conn: conn,
 		buf:  bufio.NewWriterSize(conn, size),
 	}
@@ -97,7 +97,7 @@ func newClient(conn io.WriteCloser, size int) *client {
 // Set the key prefix for the client. All future stats will be sent with the
 // prefix value prepended to the bucket.
 // Ensures there is only a single "." delimeter at the end. Will remove extraneous ones if present and add one if not present.
-func (c *client) SetPrefix(prefix string) {
+func (c *Client) SetPrefix(prefix string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	c.prefix = strings.TrimRight(prefix, ".") + "."
@@ -118,62 +118,62 @@ func GetHostname() (string, error) {
 }
 
 // Increment the counter for the given bucket.
-func (c *client) Increment(stat string, count int, rate float64) error {
+func (c *Client) Increment(stat string, count int, rate float64) error {
 	return c.send(stat, rate, strconv.Itoa(count)+"|c")
 }
 
 // Decrement the counter for the given bucket.
-func (c *client) Decrement(stat string, count int, rate float64) error {
+func (c *Client) Decrement(stat string, count int, rate float64) error {
 	return c.Increment(stat, -count, rate)
 }
 
 // Record time spent for the given bucket with time.Duration.
-func (c *client) Duration(stat string, duration time.Duration, rate float64) error {
+func (c *Client) Duration(stat string, duration time.Duration, rate float64) error {
 	return c.send(stat, rate, strconv.FormatFloat(duration.Seconds()*1000, 'f', 6, 64)+"|ms")
 }
 
 // Record time spent for the given bucket in milliseconds.
-func (c *client) Timing(stat string, delta int, rate float64) error {
+func (c *Client) Timing(stat string, delta int, rate float64) error {
 	return c.send(stat, rate, strconv.Itoa(delta)+"|ms")
 }
 
 // Calculate time spent in given function and send it.
-func (c *client) Time(stat string, rate float64, f func()) error {
+func (c *Client) Time(stat string, rate float64, f func()) error {
 	ts := time.Now()
 	f()
 	return c.Duration(stat, time.Since(ts), rate)
 }
 
 // Record arbitrary values for the given bucket.
-func (c *client) Gauge(stat string, value int, rate float64) error {
+func (c *Client) Gauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, strconv.Itoa(value)+"|g")
 }
 
 // Increment the value of the gauge.
-func (c *client) IncrementGauge(stat string, value int, rate float64) error {
+func (c *Client) IncrementGauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, "+"+strconv.Itoa(value)+"|g")
 	// return c.send(stat, rate, "+%d|g", value)
 }
 
 // Decrement the value of the gauge.
-func (c *client) DecrementGauge(stat string, value int, rate float64) error {
+func (c *Client) DecrementGauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, "-"+strconv.Itoa(value)+"|g")
 }
 
 // Record unique occurences of events.
-func (c *client) Unique(stat string, value int, rate float64) error {
+func (c *Client) Unique(stat string, value int, rate float64) error {
 	return c.send(stat, rate, strconv.Itoa(value)+"|s")
 }
 
 // Flush writes any buffered data to the network.
-func (c *client) Flush() error {
+func (c *Client) Flush() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.buf.Flush()
 }
 
 // Closes the connection.
-func (c *client) Close() error {
+func (c *Client) Close() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if c.buf == nil {
@@ -186,7 +186,7 @@ func (c *client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *client) send(stat string, rate float64, format string, args ...interface{}) error {
+func (c *Client) send(stat string, rate float64, format string, args ...interface{}) error {
 	if rate < 1 {
 		if rand.Float64() < rate {
 			format = format + "|@" + strconv.FormatFloat(rate, 'f', -1, 64)
