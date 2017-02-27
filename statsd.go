@@ -152,7 +152,6 @@ func (c *Client) Gauge(stat string, value int, rate float64) error {
 // Increment the value of the gauge.
 func (c *Client) IncrementGauge(stat string, value int, rate float64) error {
 	return c.send(stat, rate, "+"+strconv.Itoa(value)+"|g")
-	// return c.send(stat, rate, "+%d|g", value)
 }
 
 // Decrement the value of the gauge.
