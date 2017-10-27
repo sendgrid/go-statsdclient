@@ -27,8 +27,7 @@ func newWriteToConn(raddr string) (*writeToConn, error) {
 }
 
 func (w *writeToConn) Write(p []byte) (int, error) {
-	n, err := w.udpConn.WriteToUDP(p, w.remoteAddr)
-	return n, err
+	return w.udpConn.WriteToUDP(p, w.remoteAddr)
 }
 
 func (w *writeToConn) Close() error {
